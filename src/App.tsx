@@ -1,18 +1,26 @@
 import { useState } from 'react'
 import { UsersTab } from './tabs/UsersTab'
+import { PoliciesTab } from './tabs/PoliciesTab'
 import type { AdminConfig } from './api/adminApi'
 
+type Tab = 'users' | 'policies'
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'users',    label: 'Usuários' },
+  { id: 'policies', label: 'Apólices' },
+]
+
 function App() {
-  // Config compartilhada com todos os tabs — equivalente a um ViewModel no nível da Activity
   const [config, setConfig] = useState<AdminConfig>({
     baseUrl: 'http://localhost:8080',
     adminKey: 'esparta-admin-2026',
   })
+  // activeTab = equivalente ao backstack/NavController no Android
+  const [activeTab, setActiveTab] = useState<Tab>('users')
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', background: '#f5f5f5', minHeight: '100vh' }}>
 
-      {/* Barra de configuração */}
       <header style={{ background: '#1a1a2e', color: '#fff', padding: '16px 24px' }}>
         <h1 style={{ fontSize: 18, fontWeight: 600 }}>Esparta Admin</h1>
       </header>
@@ -32,10 +40,32 @@ function App() {
         />
       </div>
 
-      {/* Conteúdo */}
+      {/* Tab bar — equivalente ao BottomNavigationView ou TabLayout no Android */}
+      <div style={{ display: 'flex', background: '#fff', borderBottom: '2px solid #e0e0e0', padding: '0 24px' }}>
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              background: 'none',
+              fontSize: 14,
+              cursor: 'pointer',
+              color: activeTab === t.id ? '#1a1a2e' : '#666',
+              borderBottom: activeTab === t.id ? '3px solid #1a1a2e' : '3px solid transparent',
+              fontWeight: activeTab === t.id ? 600 : 400,
+              marginBottom: -2,
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ maxWidth: 860, margin: '32px auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,.08)', padding: 28 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20, color: '#1a1a2e' }}>Usuários</h2>
-        <UsersTab config={config} />
+        {activeTab === 'users'    && <UsersTab    config={config} />}
+        {activeTab === 'policies' && <PoliciesTab config={config} />}
       </div>
 
     </div>
