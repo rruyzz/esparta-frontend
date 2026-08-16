@@ -1,5 +1,5 @@
-import type { AdminConfig } from '../api/adminApi'
-import type { QuoteStatus, QuoteCoverages } from '../types'
+import type { AdminConfig } from '../../api/adminApi'
+import type { QuoteStatus, QuoteCoverages } from '../../types'
 import { useQuotes } from './useQuotes'
 
 interface Props {

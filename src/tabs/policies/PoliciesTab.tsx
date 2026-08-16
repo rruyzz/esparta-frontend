@@ -1,5 +1,5 @@
-import type { AdminConfig } from '../api/adminApi'
-import type { PolicyStatus, PolicyType } from '../types'
+import type { AdminConfig } from '../../api/adminApi'
+import type { PolicyStatus, PolicyType } from '../../types'
 import { usePolicies } from './usePolicies'
 
 interface Props {

@@ -1,5 +1,5 @@
-import type { AdminConfig } from '../api/adminApi'
-import type { ClaimStatus } from '../types'
+import type { AdminConfig } from '../../api/adminApi'
+import type { ClaimStatus } from '../../types'
 import { useClaims } from './useClaims'
 
 interface Props {

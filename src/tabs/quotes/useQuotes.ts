@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import type { AdminConfig } from '../api/adminApi'
-import type { Quote, QuoteHistoryEntry } from '../types'
-import { listQuotes, updateQuoteStatus, getQuoteHistory } from '../api/adminApi'
+import type { AdminConfig } from '../../api/adminApi'
+import type { Quote, QuoteHistoryEntry } from '../../types'
+import { listQuotes, updateQuoteStatus, getQuoteHistory } from '../../api/adminApi'
 
 export function useQuotes(config: AdminConfig) {
   const [quotes, setQuotes]   = useState<Quote[]>([])

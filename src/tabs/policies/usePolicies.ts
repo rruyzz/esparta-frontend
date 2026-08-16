@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import type { AdminConfig } from '../api/adminApi'
-import type { Policy, PolicyStatus, PolicyType } from '../types'
-import { listPolicies, createPolicy } from '../api/adminApi'
+import type { AdminConfig } from '../../api/adminApi'
+import type { Policy, PolicyStatus, PolicyType } from '../../types'
+import { listPolicies, createPolicy } from '../../api/adminApi'
 
 export const emptyPolicyForm = {
   cpf: '',

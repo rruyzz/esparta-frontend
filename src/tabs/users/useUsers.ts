@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import type { AdminConfig } from '../api/adminApi'
-import type { User } from '../types'
-import { listUsers, createUser, deleteUser } from '../api/adminApi'
+import type { AdminConfig } from '../../api/adminApi'
+import type { User } from '../../types'
+import { listUsers, createUser, deleteUser } from '../../api/adminApi'
 
 // Estado + regras da tela de Usuários — equivalente a um ViewModel no Android.
 // UsersTab.tsx só consome o que este hook devolve; nunca chama a API diretamente.

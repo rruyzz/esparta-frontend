@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import type { AdminConfig } from '../api/adminApi'
-import type { Claim, ClaimStatus, ClaimHistoryEntry } from '../types'
-import { listClaims, updateClaimStatus, getClaimHistory } from '../api/adminApi'
+import type { AdminConfig } from '../../api/adminApi'
+import type { Claim, ClaimStatus, ClaimHistoryEntry } from '../../types'
+import { listClaims, updateClaimStatus, getClaimHistory } from '../../api/adminApi'
 
 export function useClaims(config: AdminConfig) {
   const [claims, setClaims]   = useState<Claim[]>([])

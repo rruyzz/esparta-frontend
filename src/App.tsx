@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { UsersTab } from './tabs/UsersTab'
-import { PoliciesTab } from './tabs/PoliciesTab'
-import { ClaimsTab } from './tabs/ClaimsTab'
-import { QuotesTab } from './tabs/QuotesTab'
+import { UsersTab } from './tabs/users/UsersTab'
+import { PoliciesTab } from './tabs/policies/PoliciesTab'
+import { ClaimsTab } from './tabs/claims/ClaimsTab'
+import { QuotesTab } from './tabs/quotes/QuotesTab'
 import type { AdminConfig } from './api/adminApi'
 
 type Tab = 'users' | 'policies' | 'claims' | 'quotes'

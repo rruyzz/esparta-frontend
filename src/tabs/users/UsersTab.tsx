@@ -1,5 +1,5 @@
-import type { AdminConfig } from '../api/adminApi'
-import type { User } from '../types'
+import type { AdminConfig } from '../../api/adminApi'
+import type { User } from '../../types'
 import { useUsers } from './useUsers'
 
 // Props = parâmetros do composable/componente.
