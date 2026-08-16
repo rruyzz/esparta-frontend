@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import { UsersTab } from './tabs/UsersTab'
 import { PoliciesTab } from './tabs/PoliciesTab'
+import { ClaimsTab } from './tabs/ClaimsTab'
+import { QuotesTab } from './tabs/QuotesTab'
 import type { AdminConfig } from './api/adminApi'
 
-type Tab = 'users' | 'policies'
+type Tab = 'users' | 'policies' | 'claims' | 'quotes'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'users',    label: 'Usuários' },
   { id: 'policies', label: 'Apólices' },
+  { id: 'claims',   label: 'Sinistros' },
+  { id: 'quotes',   label: 'Cotações' },
 ]
 
 function App() {
@@ -66,6 +70,8 @@ function App() {
       <div style={{ maxWidth: 860, margin: '32px auto', background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,.08)', padding: 28 }}>
         {activeTab === 'users'    && <UsersTab    config={config} />}
         {activeTab === 'policies' && <PoliciesTab config={config} />}
+        {activeTab === 'claims'   && <ClaimsTab   config={config} />}
+        {activeTab === 'quotes'   && <QuotesTab   config={config} />}
       </div>
 
     </div>
