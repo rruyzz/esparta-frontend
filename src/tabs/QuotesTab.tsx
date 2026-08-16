@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
 import type { AdminConfig } from '../api/adminApi'
-import type { Quote, QuoteStatus, QuoteHistoryEntry, QuoteCoverages } from '../types'
-import { listQuotes, updateQuoteStatus, getQuoteHistory } from '../api/adminApi'
+import type { QuoteStatus, QuoteCoverages } from '../types'
+import { useQuotes } from './useQuotes'
 
 interface Props {
   config: AdminConfig
@@ -41,80 +40,14 @@ function formatMoney(value: number) {
 }
 
 export function QuotesTab({ config }: Props) {
-  const [quotes, setQuotes]   = useState<Quote[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
-
-  const [premiumDraft, setPremiumDraft] = useState<Record<string, string>>({})
-  const [validUntilDraft, setValidUntilDraft] = useState<Record<string, string>>({})
-  const [notesDraft, setNotesDraft]     = useState<Record<string, string>>({})
-  const [saving, setSaving]             = useState<string | null>(null)
-  const [openHistory, setOpenHistory]   = useState<string | null>(null)
-  const [history, setHistory]           = useState<QuoteHistoryEntry[]>([])
-  const [historyLoading, setHistoryLoading] = useState(false)
-
-  function load() {
-    listQuotes(config)
-      .then(setQuotes)
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(load, [config])
-
-  async function handleRespond(id: string) {
-    const premium = parseFloat(premiumDraft[id])
-    const validRaw = validUntilDraft[id]
-    if (!premium || Number.isNaN(premium) || premium <= 0) {
-      setError('Prêmio inválido')
-      return
-    }
-    if (!validRaw) {
-      setError('Data de validade obrigatória')
-      return
-    }
-    setSaving(id)
-    try {
-      await updateQuoteStatus(config, id, 'RESPONDIDA', {
-        premium,
-        valid_until: new Date(validRaw).getTime(),
-        notes: notesDraft[id] ?? '',
-      })
-      load()
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setSaving(null)
-    }
-  }
-
-  async function handleClose(id: string) {
-    setSaving(id)
-    try {
-      await updateQuoteStatus(config, id, 'FECHADA')
-      load()
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setSaving(null)
-    }
-  }
-
-  async function handleToggleHistory(id: string) {
-    if (openHistory === id) {
-      setOpenHistory(null)
-      return
-    }
-    setOpenHistory(id)
-    setHistoryLoading(true)
-    try {
-      setHistory(await getQuoteHistory(config, id))
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setHistoryLoading(false)
-    }
-  }
+  const {
+    quotes, loading, error,
+    premiumDraft, setPremiumDraft,
+    validUntilDraft, setValidUntilDraft,
+    notesDraft, setNotesDraft,
+    saving, openHistory, history, historyLoading,
+    respond, close, toggleHistory,
+  } = useQuotes(config)
 
   if (loading) return <p>Carregando...</p>
   if (error)   return <p style={{ color: 'red' }}>{error}</p>
@@ -178,14 +111,14 @@ export function QuotesTab({ config }: Props) {
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                   <button
-                    onClick={() => handleRespond(q.id)}
+                    onClick={() => respond(q.id)}
                     disabled={saving === q.id}
                     style={{ padding: '9px 20px', background: '#1a1a2e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
                   >
                     {saving === q.id ? 'Enviando...' : 'Responder cotação'}
                   </button>
                   <button
-                    onClick={() => handleToggleHistory(q.id)}
+                    onClick={() => toggleHistory(q.id)}
                     style={{ padding: '9px 14px', border: '1px solid #1a1a2e', background: '#fff', color: '#1a1a2e', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}
                   >
                     Histórico
@@ -210,7 +143,7 @@ export function QuotesTab({ config }: Props) {
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                   {q.status === 'RESPONDIDA' && (
                     <button
-                      onClick={() => handleClose(q.id)}
+                      onClick={() => close(q.id)}
                       disabled={saving === q.id}
                       style={{ padding: '8px 16px', background: '#fff', color: '#c62828', border: '1px solid #c62828', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}
                     >
@@ -218,7 +151,7 @@ export function QuotesTab({ config }: Props) {
                     </button>
                   )}
                   <button
-                    onClick={() => handleToggleHistory(q.id)}
+                    onClick={() => toggleHistory(q.id)}
                     style={{ padding: '9px 14px', border: '1px solid #1a1a2e', background: '#fff', color: '#1a1a2e', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}
                   >
                     Histórico

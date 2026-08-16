@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
 import type { AdminConfig } from '../api/adminApi'
-import type { Policy, PolicyStatus, PolicyType } from '../types'
-import { listPolicies, createPolicy } from '../api/adminApi'
+import type { PolicyStatus, PolicyType } from '../types'
+import { usePolicies } from './usePolicies'
 
 interface Props {
   config: AdminConfig
@@ -28,57 +27,13 @@ function formatDate(epochMs: number) {
   return new Date(epochMs).toLocaleDateString('pt-BR')
 }
 
-const emptyForm = {
-  cpf: '',
-  insurerName: '',
-  type: 'AUTO' as PolicyType,
-  startDate: '',
-  endDate: '',
-  status: 'ATIVO' as PolicyStatus,
-  pdfUrl: '',
-}
-
 export function PoliciesTab({ config }: Props) {
-  const [policies, setPolicies] = useState<Policy[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState<string | null>(null)
-
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState(emptyForm)
-  const [creating, setCreating] = useState(false)
-
-  function load() {
-    listPolicies(config)
-      .then(setPolicies)
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(load, [config])
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
-    setCreating(true)
-    setError(null)
-    try {
-      await createPolicy(config, {
-        cpf: form.cpf,
-        insurer_name: form.insurerName,
-        type: form.type,
-        start_date: new Date(form.startDate).getTime(),
-        end_date: new Date(form.endDate).getTime(),
-        status: form.status,
-        pdf_url: form.pdfUrl || undefined,
-      })
-      setForm(emptyForm)
-      setShowForm(false)
-      load()
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setCreating(false)
-    }
-  }
+  const {
+    policies, loading, error,
+    showForm, setShowForm,
+    form, setForm,
+    creating, create,
+  } = usePolicies(config)
 
   if (loading) return <p>Carregando...</p>
 
@@ -97,7 +52,7 @@ export function PoliciesTab({ config }: Props) {
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {showForm && (
-        <form onSubmit={handleCreate} style={{ border: '1px solid #e0e0e0', borderRadius: 10, padding: 20, marginBottom: 20, background: '#fafafa' }}>
+        <form onSubmit={create} style={{ border: '1px solid #e0e0e0', borderRadius: 10, padding: 20, marginBottom: 20, background: '#fafafa' }}>
           <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', fontSize: 13, color: '#555', marginBottom: 5 }}>CPF do segurado</label>
