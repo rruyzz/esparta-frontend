@@ -10,7 +10,6 @@ import type {
   Quote,
   QuoteStatus,
   QuoteHistoryEntry,
-  QuoteCoverages,
   QuoteResponseData,
 } from '../types'
 
