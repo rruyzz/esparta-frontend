@@ -20,7 +20,7 @@ Painel admin React + Vite + TypeScript. Single-page app sem roteador — navega�
 **Fluxo de dados:**
 ```
 App.tsx (AdminConfig state)
-  └── Tab components (UsersTab, PoliciesTab)
+  └── Tab components (UsersTab, PoliciesTab, ClaimsTab, QuotesTab)
         └── src/api/adminApi.ts  ← único ponto de acesso ao backend
               └── GET/POST/PATCH /v1/admin/*
 ```
@@ -38,4 +38,4 @@ App.tsx (AdminConfig state)
 - JSON snake_case em toda a stack — bater com os `json:` tags do Go.
 - Styling inline via `style={{}}` — sem CSS modules, sem Tailwind, sem styled-components.
 - Autenticação: `X-Admin-Key: esparta-admin-2026` (configurável pelo usuário no header do app).
-- Ao adicionar um novo recurso (ex: sinistros), criar `src/tabs/ClaimsTab.tsx`, adicionar as funções em `adminApi.ts`, registrar o tipo em `types/index.ts`, e adicionar a entry em `TABS` no `App.tsx`.
+- Ao adicionar um novo recurso, criar `src/tabs/<Recurso>Tab.tsx`, adicionar as funções em `adminApi.ts`, registrar o tipo em `types/index.ts`, e adicionar a entry em `TABS` no `App.tsx`.
