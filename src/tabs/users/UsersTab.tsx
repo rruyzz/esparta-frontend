@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
-import type { AdminConfig } from '../api/adminApi'
-import type { User } from '../types'
-import { listUsers, createUser, deleteUser } from '../api/adminApi'
+import type { AdminConfig } from '../../api/adminApi'
+import type { User } from '../../types'
+import { useUsers } from './useUsers'
 
 // Props = parâmetros do composable/componente.
 // Equivalente a: fun UsersTab(config: AdminConfig) no Compose.
@@ -9,59 +8,14 @@ interface Props {
   config: AdminConfig
 }
 
-const emptyForm = { email: '', password: '', name: '', cpf: '' }
-
 export function UsersTab({ config }: Props) {
-  // useState = MutableStateFlow no ViewModel.
-  // [valor, função que atualiza o valor]
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState(emptyForm)
-  const [creating, setCreating] = useState(false)
-  const [deletingUid, setDeletingUid] = useState<string | null>(null)
-
-  function load() {
-    listUsers(config)
-      .then(setUsers)
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false))
-  }
-
-  // useEffect = LaunchedEffect no Compose / viewModelScope.launch no ViewModel.
-  // Roda quando o componente é montado ([] = sem dependências = só uma vez).
-  useEffect(load, [config])
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
-    setCreating(true)
-    setError(null)
-    try {
-      await createUser(config, form)
-      setForm(emptyForm)
-      setShowForm(false)
-      load()
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setCreating(false)
-    }
-  }
-
-  async function handleDelete(u: User) {
-    if (!confirm(`Excluir a conta de "${u.name}"?\n\nEsta ação é irreversível.`)) return
-    setDeletingUid(u.uid)
-    try {
-      await deleteUser(config, u.uid)
-      setUsers(users.filter((x) => x.uid !== u.uid))
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setDeletingUid(null)
-    }
-  }
+  const {
+    users, loading, error,
+    showForm, setShowForm,
+    form, setForm,
+    creating, deletingUid,
+    create, remove,
+  } = useUsers(config)
 
   if (loading) return <p>Carregando...</p>
 
@@ -80,7 +34,7 @@ export function UsersTab({ config }: Props) {
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {showForm && (
-        <form onSubmit={handleCreate} style={{ border: '1px solid #e0e0e0', borderRadius: 10, padding: 20, marginBottom: 20, background: '#fafafa' }}>
+        <form onSubmit={create} style={{ border: '1px solid #e0e0e0', borderRadius: 10, padding: 20, marginBottom: 20, background: '#fafafa' }}>
           <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', fontSize: 13, color: '#555', marginBottom: 5 }}>Nome</label>
@@ -139,7 +93,7 @@ export function UsersTab({ config }: Props) {
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {users.map((u: User) => (
               // key = equivalente ao stableId no DiffUtil do RecyclerView
               <tr key={u.uid} style={{ borderBottom: '1px solid #f0f0f0' }}>
                 <td style={{ padding: '10px 12px', fontWeight: 500 }}>{u.name}</td>
@@ -147,7 +101,7 @@ export function UsersTab({ config }: Props) {
                 <td style={{ padding: '10px 12px', fontFamily: 'monospace' }}>{u.cpf}</td>
                 <td style={{ padding: '10px 12px', textAlign: 'right' }}>
                   <button
-                    onClick={() => handleDelete(u)}
+                    onClick={() => remove(u)}
                     disabled={deletingUid === u.uid}
                     style={{ padding: '6px 12px', background: '#fff', color: '#c62828', border: '1px solid #c62828', borderRadius: 8, fontSize: 12, cursor: 'pointer' }}
                   >

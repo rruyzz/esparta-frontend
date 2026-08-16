@@ -31,11 +31,15 @@ App.tsx (AdminConfig state)
 
 **`src/types/index.ts`** — interfaces TypeScript espelhando os `json:` tags Go (snake_case). Datas são epoch ms (número). Nunca adicionar lógica aqui — só tipos.
 
-**`src/tabs/`** — cada tab é um componente funcional que recebe `config: AdminConfig`, busca dados no `useEffect` e renderiza. Padrão uniforme: estados `loading`, `error`, dados.
+**`src/tabs/<recurso>/`** — uma pasta por recurso (`users/`, `policies/`, `claims/`, `quotes/`), cada uma com o par:
+
+- `use<Recurso>.ts` — hook que concentra estado (`useState`) e handlers (`load`, `create`, `save`, etc.), consumindo `adminApi.ts`. Equivalente a um ViewModel/Presenter no Android: dono da lógica, sem JSX.
+- `<Recurso>Tab.tsx` — componente funcional "burro": só desestrutura o retorno de `use<Recurso>(config)` e renderiza. Não declara `useState` de dados nem chama `adminApi.ts` diretamente. Padrão uniforme: estados `loading`, `error`, dados vindos do hook.
 
 ## Convenções
 
 - JSON snake_case em toda a stack — bater com os `json:` tags do Go.
 - Styling inline via `style={{}}` — sem CSS modules, sem Tailwind, sem styled-components.
 - Autenticação: `X-Admin-Key: esparta-admin-2026` (configurável pelo usuário no header do app).
-- Ao adicionar um novo recurso, criar `src/tabs/<Recurso>Tab.tsx`, adicionar as funções em `adminApi.ts`, registrar o tipo em `types/index.ts`, e adicionar a entry em `TABS` no `App.tsx`.
+- Ao adicionar um novo recurso, criar `src/tabs/<recurso>/use<Recurso>.ts` (hook com estado/lógica) + `src/tabs/<recurso>/<Recurso>Tab.tsx` (view), adicionar as funções em `adminApi.ts`, registrar o tipo em `types/index.ts`, e adicionar a entry em `TABS` no `App.tsx`.
+- `color-scheme` em `index.css` é fixado como `light` — o admin não tem modo escuro; deixar `light dark` faz o navegador estilizar `<input>`/`<select>` nativos com texto claro em fundo escuro, invisível sobre o fundo branco forçado inline.

@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
-import type { AdminConfig } from '../api/adminApi'
-import type { Claim, ClaimStatus, ClaimHistoryEntry } from '../types'
-import { listClaims, updateClaimStatus, getClaimHistory } from '../api/adminApi'
+import type { AdminConfig } from '../../api/adminApi'
+import type { ClaimStatus } from '../../types'
+import { useClaims } from './useClaims'
 
 interface Props {
   config: AdminConfig
@@ -33,58 +32,13 @@ function formatDateTime(epochMs: number) {
 }
 
 export function ClaimsTab({ config }: Props) {
-  const [claims, setClaims]   = useState<Claim[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
-
-  // Estado de edição por linha — equivalente a um Map<id, UiState> no ViewModel.
-  const [statusDraft, setStatusDraft] = useState<Record<string, ClaimStatus>>({})
-  const [noteDraft, setNoteDraft]     = useState<Record<string, string>>({})
-  const [saving, setSaving]           = useState<string | null>(null)
-  const [openHistory, setOpenHistory] = useState<string | null>(null)
-  const [history, setHistory]         = useState<ClaimHistoryEntry[]>([])
-  const [historyLoading, setHistoryLoading] = useState(false)
-
-  function load() {
-    listClaims(config)
-      .then((data) => {
-        setClaims(data)
-        setStatusDraft(Object.fromEntries(data.map((c) => [c.id, c.status])))
-        setNoteDraft(Object.fromEntries(data.map((c) => [c.id, c.status_note ?? ''])))
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(load, [config])
-
-  async function handleSave(id: string) {
-    setSaving(id)
-    try {
-      await updateClaimStatus(config, id, statusDraft[id], noteDraft[id])
-      load()
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setSaving(null)
-    }
-  }
-
-  async function handleToggleHistory(id: string) {
-    if (openHistory === id) {
-      setOpenHistory(null)
-      return
-    }
-    setOpenHistory(id)
-    setHistoryLoading(true)
-    try {
-      setHistory(await getClaimHistory(config, id))
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setHistoryLoading(false)
-    }
-  }
+  const {
+    claims, loading, error,
+    statusDraft, setStatusDraft,
+    noteDraft, setNoteDraft,
+    saving, openHistory, history, historyLoading,
+    save, toggleHistory,
+  } = useClaims(config)
 
   if (loading) return <p>Carregando...</p>
   if (error)   return <p style={{ color: 'red' }}>{error}</p>
@@ -116,14 +70,14 @@ export function ClaimsTab({ config }: Props) {
               style={{ flex: 1, resize: 'vertical', minHeight: 36, padding: '6px 10px', border: '1px solid #ccc', borderRadius: 8, fontSize: 13, background: '#fafafa' }}
             />
             <button
-              onClick={() => handleSave(c.id)}
+              onClick={() => save(c.id)}
               disabled={saving === c.id}
               style={{ padding: '9px 20px', background: '#1a1a2e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               {saving === c.id ? 'Salvando...' : 'Salvar'}
             </button>
             <button
-              onClick={() => handleToggleHistory(c.id)}
+              onClick={() => toggleHistory(c.id)}
               style={{ padding: '9px 14px', border: '1px solid #1a1a2e', background: '#fff', color: '#1a1a2e', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}
             >
               Histórico
