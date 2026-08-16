@@ -1,6 +1,7 @@
 import type { AdminConfig } from '../../api/adminApi'
 import type { QuoteStatus, QuoteCoverages } from '../../types'
 import { useQuotes } from './useQuotes'
+import { StatusHistory } from '../shared/StatusHistory'
 
 interface Props {
   config: AdminConfig
@@ -161,23 +162,7 @@ export function QuotesTab({ config }: Props) {
             )}
 
             {openHistory === q.id && (
-              <div style={{ marginTop: 12, borderTop: '1px solid #f0f0f0', paddingTop: 10 }}>
-                {historyLoading ? (
-                  <div style={{ fontSize: 12, color: '#aaa' }}>Carregando...</div>
-                ) : history.length === 0 ? (
-                  <div style={{ fontSize: 12, color: '#aaa' }}>Sem histórico</div>
-                ) : (
-                  history.map((h, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '6px 0', borderBottom: '1px solid #f8f8f8', fontSize: 12 }}>
-                      <span style={{ color: '#aaa', whiteSpace: 'nowrap', minWidth: 110 }}>{formatDateTime(h.changed_at)}</span>
-                      <span style={{ ...badge, ...badgeStyle[h.from_status], fontSize: 10 }}>{h.from_status}</span>
-                      <span style={{ color: '#bbb' }}>→</span>
-                      <span style={{ ...badge, ...badgeStyle[h.to_status], fontSize: 10 }}>{h.to_status}</span>
-                      {h.note && <span style={{ color: '#777', fontStyle: 'italic' }}>"{h.note}"</span>}
-                    </div>
-                  ))
-                )}
-              </div>
+              <StatusHistory loading={historyLoading} entries={history} badgeStyle={badgeStyle} />
             )}
           </div>
         )
