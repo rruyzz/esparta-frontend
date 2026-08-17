@@ -8,11 +8,13 @@ interface Props {
 
 const POLICY_TYPES: PolicyType[] = ['VIDA', 'AUTO', 'RESIDENCIAL', 'SAUDE', 'VIAGEM']
 const POLICY_STATUSES: PolicyStatus[] = ['ATIVO', 'PENDENTE', 'CANCELADO']
+const POLICY_STATUS_OPTIONS: PolicyStatus[] = ['ATIVO', 'PENDENTE', 'CANCELADO', 'VENCIDA']
 
 const badgeStyle: Record<PolicyStatus, React.CSSProperties> = {
   ATIVO:     { background: '#e8f5e9', color: '#2e7d32' },
   PENDENTE:  { background: '#fff8e1', color: '#f57f17' },
   CANCELADO: { background: '#ffebee', color: '#c62828' },
+  VENCIDA:   { background: '#eeeeee', color: '#616161' },
 }
 
 const badge: React.CSSProperties = {
@@ -33,6 +35,8 @@ export function PoliciesTab({ config }: Props) {
     showForm, setShowForm,
     form, setForm,
     creating, create,
+    statusDraft, setStatusDraft,
+    saving, saveStatus,
   } = usePolicies(config)
 
   if (loading) return <p>Carregando...</p>
@@ -137,6 +141,7 @@ export function PoliciesTab({ config }: Props) {
               <th style={{ padding: '8px 12px' }}>Status</th>
               <th style={{ padding: '8px 12px' }}>Início → Vencimento</th>
               <th style={{ padding: '8px 12px' }}>CPF</th>
+              <th style={{ padding: '8px 12px' }}>Alterar status</th>
             </tr>
           </thead>
           <tbody>
@@ -152,6 +157,24 @@ export function PoliciesTab({ config }: Props) {
                 </td>
                 <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: 12, color: '#888' }}>
                   {p.cpf}
+                </td>
+                <td style={{ padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <select
+                      value={statusDraft[p.id] ?? p.status}
+                      onChange={(e) => setStatusDraft({ ...statusDraft, [p.id]: e.target.value as PolicyStatus })}
+                      style={{ padding: '6px 8px', border: '1px solid #ccc', borderRadius: 6, fontSize: 12, background: '#fff' }}
+                    >
+                      {POLICY_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <button
+                      onClick={() => saveStatus(p.id)}
+                      disabled={saving === p.id || (statusDraft[p.id] ?? p.status) === p.status}
+                      style={{ padding: '6px 12px', border: '1px solid #1a1a2e', background: '#fff', color: '#1a1a2e', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}
+                    >
+                      {saving === p.id ? 'Salvando...' : 'Salvar'}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

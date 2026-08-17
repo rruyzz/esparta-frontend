@@ -24,7 +24,7 @@ export interface User {
 
 // ── Apólice ───────────────────────────────────────────────────────────────────
 
-export type PolicyStatus = 'ATIVO' | 'PENDENTE' | 'CANCELADO'
+export type PolicyStatus = 'ATIVO' | 'PENDENTE' | 'CANCELADO' | 'VENCIDA'
 export type PolicyType = 'VIDA' | 'AUTO' | 'RESIDENCIAL' | 'SAUDE' | 'VIAGEM'
 
 export interface Policy {
@@ -94,6 +94,7 @@ export interface QuoteResponseData {
 
 export interface Quote {
   id: string
+  policy_id?: string
   vehicle_id: string
   vehicle_snapshot: VehicleSnapshot
   coverages: QuoteCoverages
@@ -110,4 +111,30 @@ export interface QuoteHistoryEntry {
   to_status: QuoteStatus
   note?: string
   changed_at: number  // epoch ms
+}
+
+// ── Veículo ───────────────────────────────────────────────────────────────────
+
+export type VehicleUsageType = 'PARTICULAR' | 'COMERCIAL'
+
+export interface Vehicle {
+  id: string
+  plate: string
+  year: number
+  usage_type: VehicleUsageType
+  overnight_cep: string
+  created_at: number  // epoch ms
+}
+
+// ── Proposta ──────────────────────────────────────────────────────────────────
+
+export type ProposalStatus = 'GERADA' | 'ENVIADA' | 'ASSINADA'
+
+export interface Proposal {
+  id: string
+  quote_id: string
+  pdf_url: string
+  status: ProposalStatus
+  created_at: number  // epoch ms
+  updated_at: number  // epoch ms
 }

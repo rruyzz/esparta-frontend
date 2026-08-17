@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { AdminConfig } from '../../api/adminApi'
 import type { Policy, PolicyStatus, PolicyType } from '../../types'
-import { listPolicies, createPolicy } from '../../api/adminApi'
+import { listPolicies, createPolicy, updatePolicyStatus } from '../../api/adminApi'
 
 export const emptyPolicyForm = {
   cpf: '',
@@ -22,9 +22,15 @@ export function usePolicies(config: AdminConfig) {
   const [form, setForm] = useState(emptyPolicyForm)
   const [creating, setCreating] = useState(false)
 
+  const [statusDraft, setStatusDraft] = useState<Record<string, PolicyStatus>>({})
+  const [saving, setSaving] = useState<string | null>(null)
+
   function load() {
     listPolicies(config)
-      .then(setPolicies)
+      .then((data) => {
+        setPolicies(data)
+        setStatusDraft(Object.fromEntries(data.map((p) => [p.id, p.status])))
+      })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false))
   }
@@ -55,6 +61,18 @@ export function usePolicies(config: AdminConfig) {
     }
   }
 
+  async function saveStatus(id: string) {
+    setSaving(id)
+    try {
+      await updatePolicyStatus(config, id, statusDraft[id])
+      load()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setSaving(null)
+    }
+  }
+
   return {
     policies,
     loading,
@@ -65,5 +83,9 @@ export function usePolicies(config: AdminConfig) {
     setForm,
     creating,
     create,
+    statusDraft,
+    setStatusDraft,
+    saving,
+    saveStatus,
   }
 }
