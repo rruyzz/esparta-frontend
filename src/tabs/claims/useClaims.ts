@@ -1,12 +1,24 @@
 import { useState, useEffect } from 'react'
 import type { AdminConfig } from '../../api/adminApi'
-import type { Claim, ClaimStatus, ClaimHistoryEntry } from '../../types'
-import { listClaims, updateClaimStatus, getClaimHistory } from '../../api/adminApi'
+import type { Claim, ClaimStatus, ClaimHistoryEntry, OccurrenceType } from '../../types'
+import { listClaims, createClaim, updateClaimStatus, getClaimHistory } from '../../api/adminApi'
+
+export const emptyClaimForm = {
+  cpf: '',
+  policyId: '',
+  occurrenceType: 'COLISAO' as OccurrenceType,
+  description: '',
+  photoUrl: '',
+}
 
 export function useClaims(config: AdminConfig) {
   const [claims, setClaims]   = useState<Claim[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
+
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState(emptyClaimForm)
+  const [creating, setCreating] = useState(false)
 
   // Estado de edição por linha — equivalente a um Map<id, UiState> no ViewModel.
   const [statusDraft, setStatusDraft] = useState<Record<string, ClaimStatus>>({})
@@ -28,6 +40,28 @@ export function useClaims(config: AdminConfig) {
   }
 
   useEffect(load, [config])
+
+  async function create(e: React.FormEvent) {
+    e.preventDefault()
+    setCreating(true)
+    setError(null)
+    try {
+      await createClaim(config, {
+        cpf: form.cpf,
+        policy_id: form.policyId,
+        occurrence_type: form.occurrenceType,
+        description: form.description,
+        photo_url: form.photoUrl || undefined,
+      })
+      setForm(emptyClaimForm)
+      setShowForm(false)
+      load()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setCreating(false)
+    }
+  }
 
   async function save(id: string) {
     setSaving(id)
@@ -61,6 +95,12 @@ export function useClaims(config: AdminConfig) {
     claims,
     loading,
     error,
+    showForm,
+    setShowForm,
+    form,
+    setForm,
+    creating,
+    create,
     statusDraft,
     setStatusDraft,
     noteDraft,
