@@ -11,6 +11,11 @@ import type {
   QuoteStatus,
   QuoteHistoryEntry,
   QuoteResponseData,
+  QuoteCoverages,
+  Vehicle,
+  VehicleUsageType,
+  Proposal,
+  ProposalStatus,
 } from '../types'
 
 // ── Configuração ──────────────────────────────────────────────────────────────
@@ -90,6 +95,14 @@ export function createPolicy(
   return request(config, 'POST', '/v1/admin/policies', data)
 }
 
+export function updatePolicyStatus(
+  config: AdminConfig,
+  id: string,
+  status: PolicyStatus,
+): Promise<{ id: string }> {
+  return request(config, 'PATCH', `/v1/admin/policies/${id}`, { status })
+}
+
 // ── Sinistros ─────────────────────────────────────────────────────────────────
 
 export function listClaims(config: AdminConfig, cpf?: string): Promise<Claim[]> {
@@ -148,4 +161,57 @@ export function getQuoteHistory(
   id: string,
 ): Promise<QuoteHistoryEntry[]> {
   return request(config, 'GET', `/v1/admin/quotes/${id}/history`)
+}
+
+export function createQuoteAdmin(
+  config: AdminConfig,
+  data: {
+    cpf: string
+    vehicle_id: string
+    policy_id?: string
+    coverages: QuoteCoverages
+    notes?: string
+  },
+): Promise<{ id: string }> {
+  return request(config, 'POST', '/v1/admin/quotes', data)
+}
+
+// ── Veículos ──────────────────────────────────────────────────────────────────
+
+export function listVehiclesAdmin(config: AdminConfig, cpf: string): Promise<Vehicle[]> {
+  return request(config, 'GET', `/v1/admin/vehicles?cpf=${encodeURIComponent(cpf)}`)
+}
+
+export function createVehicleAdmin(
+  config: AdminConfig,
+  data: {
+    cpf: string
+    plate: string
+    year: number
+    usage_type: VehicleUsageType
+    overnight_cep: string
+  },
+): Promise<{ id: string }> {
+  return request(config, 'POST', '/v1/admin/vehicles', data)
+}
+
+// ── Propostas ─────────────────────────────────────────────────────────────────
+
+export function listProposalsByQuote(config: AdminConfig, quoteId: string): Promise<Proposal[]> {
+  return request(config, 'GET', `/v1/admin/proposals?quote_id=${encodeURIComponent(quoteId)}`)
+}
+
+export function createProposal(
+  config: AdminConfig,
+  data: { quote_id: string; pdf_url: string },
+): Promise<{ id: string }> {
+  return request(config, 'POST', '/v1/admin/proposals', data)
+}
+
+export function updateProposalStatus(
+  config: AdminConfig,
+  id: string,
+  status: ProposalStatus,
+): Promise<{ id: string }> {
+  return request(config, 'PATCH', `/v1/admin/proposals/${id}`, { status })
 }

@@ -1,7 +1,32 @@
 import { useState, useEffect } from 'react'
 import type { AdminConfig } from '../../api/adminApi'
-import type { Quote, QuoteHistoryEntry } from '../../types'
-import { listQuotes, updateQuoteStatus, getQuoteHistory } from '../../api/adminApi'
+import type { Quote, QuoteHistoryEntry, QuoteCoverages, Policy, Vehicle, VehicleUsageType, Proposal, ProposalStatus } from '../../types'
+import {
+  listQuotes, updateQuoteStatus, getQuoteHistory,
+  listPolicies, listVehiclesAdmin, createVehicleAdmin, createQuoteAdmin,
+  listProposalsByQuote, createProposal, updateProposalStatus,
+} from '../../api/adminApi'
+
+export const emptyCreateQuoteForm = {
+  cpf: '',
+  mode: 'novo' as 'novo' | 'renovacao',
+  policyId: '',
+  vehicleId: '',
+  useNewVehicle: false,
+  newVehicle: {
+    plate: '',
+    year: '',
+    usageType: 'PARTICULAR' as VehicleUsageType,
+    overnightCep: '',
+  },
+  coverages: {
+    comprehensive: false,
+    civil_liability: false,
+    personal_accidents: false,
+    rental_car: false,
+  } as QuoteCoverages,
+  notes: '',
+}
 
 export function useQuotes(config: AdminConfig) {
   const [quotes, setQuotes]   = useState<Quote[]>([])
@@ -15,6 +40,22 @@ export function useQuotes(config: AdminConfig) {
   const [openHistory, setOpenHistory]   = useState<string | null>(null)
   const [history, setHistory]           = useState<QuoteHistoryEntry[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
+
+  // ── Criação de Cotação (renovação / seguro novo) ─────────────────────────────
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [createForm, setCreateForm] = useState(emptyCreateQuoteForm)
+  const [lookupDone, setLookupDone] = useState(false)
+  const [lookupLoading, setLookupLoading] = useState(false)
+  const [lookupPolicies, setLookupPolicies] = useState<Policy[]>([])
+  const [lookupVehicles, setLookupVehicles] = useState<Vehicle[]>([])
+  const [creating, setCreating] = useState(false)
+
+  // ── Proposta ──────────────────────────────────────────────────────────────────
+  const [openProposal, setOpenProposal] = useState<string | null>(null)
+  const [proposals, setProposals] = useState<Proposal[]>([])
+  const [proposalLoading, setProposalLoading] = useState(false)
+  const [pdfUrlDraft, setPdfUrlDraft] = useState('')
+  const [proposalSaving, setProposalSaving] = useState(false)
 
   function load() {
     listQuotes(config)
@@ -79,6 +120,124 @@ export function useQuotes(config: AdminConfig) {
     }
   }
 
+  async function searchInsured() {
+    if (!createForm.cpf) {
+      setError('CPF é obrigatório pra buscar o segurado')
+      return
+    }
+    setLookupLoading(true)
+    setError(null)
+    try {
+      const [policies, vehicles] = await Promise.all([
+        listPolicies(config, createForm.cpf),
+        listVehiclesAdmin(config, createForm.cpf),
+      ])
+      setLookupPolicies(policies.filter((p) => p.type === 'AUTO'))
+      setLookupVehicles(vehicles)
+      setLookupDone(true)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setLookupLoading(false)
+    }
+  }
+
+  async function createQuote(e: React.FormEvent) {
+    e.preventDefault()
+    setCreating(true)
+    setError(null)
+    try {
+      let vehicleId = createForm.vehicleId
+      if (createForm.useNewVehicle) {
+        const { id } = await createVehicleAdmin(config, {
+          cpf: createForm.cpf,
+          plate: createForm.newVehicle.plate,
+          year: parseInt(createForm.newVehicle.year, 10),
+          usage_type: createForm.newVehicle.usageType,
+          overnight_cep: createForm.newVehicle.overnightCep,
+        })
+        vehicleId = id
+      }
+      if (!vehicleId) {
+        setError('Selecione ou cadastre um veículo')
+        return
+      }
+      if (createForm.mode === 'renovacao' && !createForm.policyId) {
+        setError('Selecione a apólice sendo renovada')
+        return
+      }
+
+      await createQuoteAdmin(config, {
+        cpf: createForm.cpf,
+        vehicle_id: vehicleId,
+        policy_id: createForm.mode === 'renovacao' ? createForm.policyId : undefined,
+        coverages: createForm.coverages,
+        notes: createForm.notes || undefined,
+      })
+
+      setCreateForm(emptyCreateQuoteForm)
+      setLookupDone(false)
+      setLookupPolicies([])
+      setLookupVehicles([])
+      setShowCreateForm(false)
+      load()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  async function toggleProposal(quoteId: string) {
+    if (openProposal === quoteId) {
+      setOpenProposal(null)
+      return
+    }
+    setOpenProposal(quoteId)
+    setPdfUrlDraft('')
+    await loadProposals(quoteId)
+  }
+
+  async function loadProposals(quoteId: string) {
+    setProposalLoading(true)
+    try {
+      setProposals(await listProposalsByQuote(config, quoteId))
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setProposalLoading(false)
+    }
+  }
+
+  async function generateProposal(quoteId: string) {
+    if (!pdfUrlDraft) {
+      setError('URL do PDF é obrigatória')
+      return
+    }
+    setProposalSaving(true)
+    try {
+      await createProposal(config, { quote_id: quoteId, pdf_url: pdfUrlDraft })
+      setPdfUrlDraft('')
+      await loadProposals(quoteId)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setProposalSaving(false)
+    }
+  }
+
+  async function advanceProposal(quoteId: string, proposalId: string, nextStatus: ProposalStatus) {
+    setProposalSaving(true)
+    try {
+      await updateProposalStatus(config, proposalId, nextStatus)
+      await loadProposals(quoteId)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setProposalSaving(false)
+    }
+  }
+
   return {
     quotes,
     loading,
@@ -96,5 +255,25 @@ export function useQuotes(config: AdminConfig) {
     respond,
     close,
     toggleHistory,
+    showCreateForm,
+    setShowCreateForm,
+    createForm,
+    setCreateForm,
+    lookupDone,
+    lookupLoading,
+    lookupPolicies,
+    lookupVehicles,
+    creating,
+    searchInsured,
+    createQuote,
+    openProposal,
+    proposals,
+    proposalLoading,
+    pdfUrlDraft,
+    setPdfUrlDraft,
+    proposalSaving,
+    toggleProposal,
+    generateProposal,
+    advanceProposal,
   }
 }
