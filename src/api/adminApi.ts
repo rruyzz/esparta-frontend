@@ -3,6 +3,8 @@ import type {
   Policy,
   PolicyStatus,
   PolicyType,
+  Premium,
+  AutoPolicyPayload,
   Claim,
   ClaimStatus,
   OccurrenceType,
@@ -90,6 +92,10 @@ export function createPolicy(
     end_date: number
     status: PolicyStatus
     pdf_url?: string
+    policy_number: string
+    endorsement_number: string
+    premium: Premium
+    auto?: AutoPolicyPayload
   },
 ): Promise<{ id: string }> {
   return request(config, 'POST', '/v1/admin/policies', data)
