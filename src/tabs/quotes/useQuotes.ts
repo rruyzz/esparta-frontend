@@ -8,7 +8,7 @@ import {
 } from '../../api/adminApi'
 
 export const emptyCreateQuoteForm = {
-  cpf: '',
+  document: '',
   mode: 'novo' as 'novo' | 'renovacao',
   policyId: '',
   vehicleId: '',
@@ -121,16 +121,16 @@ export function useQuotes(config: AdminConfig) {
   }
 
   async function searchInsured() {
-    if (!createForm.cpf) {
-      setError('CPF é obrigatório pra buscar o segurado')
+    if (!createForm.document) {
+      setError('Documento é obrigatório pra buscar o segurado')
       return
     }
     setLookupLoading(true)
     setError(null)
     try {
       const [policies, vehicles] = await Promise.all([
-        listPolicies(config, createForm.cpf),
-        listVehiclesAdmin(config, createForm.cpf),
+        listPolicies(config, createForm.document),
+        listVehiclesAdmin(config, createForm.document),
       ])
       setLookupPolicies(policies.filter((p) => p.type === 'AUTO'))
       setLookupVehicles(vehicles)
@@ -150,7 +150,7 @@ export function useQuotes(config: AdminConfig) {
       let vehicleId = createForm.vehicleId
       if (createForm.useNewVehicle) {
         const { id } = await createVehicleAdmin(config, {
-          cpf: createForm.cpf,
+          document: createForm.document,
           plate: createForm.newVehicle.plate,
           year: parseInt(createForm.newVehicle.year, 10),
           usage_type: createForm.newVehicle.usageType,
@@ -168,7 +168,7 @@ export function useQuotes(config: AdminConfig) {
       }
 
       await createQuoteAdmin(config, {
-        cpf: createForm.cpf,
+        document: createForm.document,
         vehicle_id: vehicleId,
         policy_id: createForm.mode === 'renovacao' ? createForm.policyId : undefined,
         coverages: createForm.coverages,

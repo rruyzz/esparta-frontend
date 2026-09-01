@@ -4,7 +4,7 @@ import type { Claim, ClaimStatus, ClaimHistoryEntry, OccurrenceType } from '../.
 import { listClaims, createClaim, updateClaimStatus, getClaimHistory } from '../../api/adminApi'
 
 export const emptyClaimForm = {
-  cpf: '',
+  document: '',
   policyId: '',
   occurrenceType: 'COLISAO' as OccurrenceType,
   description: '',
@@ -47,7 +47,7 @@ export function useClaims(config: AdminConfig) {
     setError(null)
     try {
       await createClaim(config, {
-        cpf: form.cpf,
+        document: form.document,
         policy_id: form.policyId,
         occurrence_type: form.occurrenceType,
         description: form.description,

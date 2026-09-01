@@ -61,10 +61,10 @@ export function ClaimsTab({ config }: Props) {
         <form onSubmit={create} style={{ border: '1px solid #e0e0e0', borderRadius: 10, padding: 20, marginBottom: 20, background: '#fafafa' }}>
           <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, color: '#555', marginBottom: 5 }}>CPF do segurado</label>
+              <label style={{ display: 'block', fontSize: 13, color: '#555', marginBottom: 5 }}>Documento do segurado (CPF/CNPJ)</label>
               <input
-                required placeholder="00000000000" value={form.cpf}
-                onChange={(e) => setForm({ ...form, cpf: e.target.value })}
+                required placeholder="00000000000" value={form.document}
+                onChange={(e) => setForm({ ...form, document: e.target.value })}
                 style={{ width: '100%', padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fff' }}
               />
             </div>

@@ -75,7 +75,7 @@ export const emptyMainDriver: MainDriverForm = {
 }
 
 export const emptyPolicyForm = {
-  cpf: '',
+  document: '',
   insurerName: '',
   type: 'AUTO' as PolicyType,
   startDate: '',
@@ -161,7 +161,7 @@ export function usePolicies(config: AdminConfig) {
     setError(null)
     try {
       await createPolicy(config, {
-        cpf: form.cpf,
+        document: form.document,
         insurer_name: form.insurerName,
         type: form.type,
         start_date: toEpochMs(form.startDate),
