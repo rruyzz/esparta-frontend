@@ -1,5 +1,6 @@
 import type {
   User,
+  PersonType,
   Policy,
   PolicyStatus,
   PolicyType,
@@ -66,7 +67,7 @@ export function listUsers(config: AdminConfig): Promise<User[]> {
 
 export function createUser(
   config: AdminConfig,
-  data: { email: string; password: string; name: string; cpf: string },
+  data: { email: string; password: string; name: string; document: string; person_type: PersonType },
 ): Promise<{ uid: string; email: string }> {
   return request(config, 'POST', '/v1/admin/users', data)
 }
@@ -77,15 +78,15 @@ export function deleteUser(config: AdminConfig, uid: string): Promise<void> {
 
 // ── Apólices ──────────────────────────────────────────────────────────────────
 
-export function listPolicies(config: AdminConfig, cpf?: string): Promise<Policy[]> {
-  const query = cpf ? `?cpf=${encodeURIComponent(cpf)}` : ''
+export function listPolicies(config: AdminConfig, document?: string): Promise<Policy[]> {
+  const query = document ? `?document=${encodeURIComponent(document)}` : ''
   return request(config, 'GET', `/v1/admin/policies${query}`)
 }
 
 export function createPolicy(
   config: AdminConfig,
   data: {
-    cpf: string
+    document: string
     insurer_name: string
     type: PolicyType
     start_date: number
@@ -111,15 +112,15 @@ export function updatePolicyStatus(
 
 // ── Sinistros ─────────────────────────────────────────────────────────────────
 
-export function listClaims(config: AdminConfig, cpf?: string): Promise<Claim[]> {
-  const query = cpf ? `?cpf=${encodeURIComponent(cpf)}` : ''
+export function listClaims(config: AdminConfig, document?: string): Promise<Claim[]> {
+  const query = document ? `?document=${encodeURIComponent(document)}` : ''
   return request(config, 'GET', `/v1/admin/claims${query}`)
 }
 
 export function createClaim(
   config: AdminConfig,
   data: {
-    cpf: string
+    document: string
     policy_id: string
     occurrence_type: OccurrenceType
     description: string
@@ -147,8 +148,8 @@ export function getClaimHistory(
 
 // ── Cotações ──────────────────────────────────────────────────────────────────
 
-export function listQuotes(config: AdminConfig, cpf?: string): Promise<Quote[]> {
-  const query = cpf ? `?cpf=${encodeURIComponent(cpf)}` : ''
+export function listQuotes(config: AdminConfig, document?: string): Promise<Quote[]> {
+  const query = document ? `?document=${encodeURIComponent(document)}` : ''
   return request(config, 'GET', `/v1/admin/quotes${query}`)
 }
 
@@ -172,7 +173,7 @@ export function getQuoteHistory(
 export function createQuoteAdmin(
   config: AdminConfig,
   data: {
-    cpf: string
+    document: string
     vehicle_id: string
     policy_id?: string
     coverages: QuoteCoverages
@@ -184,14 +185,14 @@ export function createQuoteAdmin(
 
 // ── Veículos ──────────────────────────────────────────────────────────────────
 
-export function listVehiclesAdmin(config: AdminConfig, cpf: string): Promise<Vehicle[]> {
-  return request(config, 'GET', `/v1/admin/vehicles?cpf=${encodeURIComponent(cpf)}`)
+export function listVehiclesAdmin(config: AdminConfig, document: string): Promise<Vehicle[]> {
+  return request(config, 'GET', `/v1/admin/vehicles?document=${encodeURIComponent(document)}`)
 }
 
 export function createVehicleAdmin(
   config: AdminConfig,
   data: {
-    cpf: string
+    document: string
     plate: string
     year: number
     usage_type: VehicleUsageType

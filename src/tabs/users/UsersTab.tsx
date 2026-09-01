@@ -1,5 +1,5 @@
 import type { AdminConfig } from '../../api/adminApi'
-import type { User } from '../../types'
+import type { User, PersonType } from '../../types'
 import { useUsers } from './useUsers'
 
 // Props = parâmetros do composable/componente.
@@ -45,12 +45,23 @@ export function UsersTab({ config }: Props) {
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, color: '#555', marginBottom: 5 }}>CPF</label>
+              <label style={{ display: 'block', fontSize: 13, color: '#555', marginBottom: 5 }}>Documento (CPF/CNPJ)</label>
               <input
-                required placeholder="00000000000" value={form.cpf}
-                onChange={(e) => setForm({ ...form, cpf: e.target.value })}
+                required placeholder="00000000000" value={form.document}
+                onChange={(e) => setForm({ ...form, document: e.target.value })}
                 style={{ width: '100%', padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fff' }}
               />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: 13, color: '#555', marginBottom: 5 }}>Tipo de Pessoa</label>
+              <select
+                value={form.person_type}
+                onChange={(e) => setForm({ ...form, person_type: e.target.value as PersonType })}
+                style={{ width: '100%', padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fff' }}
+              >
+                <option value="FISICA">FISICA</option>
+                <option value="JURIDICA">JURIDICA</option>
+              </select>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
@@ -88,7 +99,7 @@ export function UsersTab({ config }: Props) {
             <tr style={{ textAlign: 'left', borderBottom: '2px solid #e0e0e0' }}>
               <th style={{ padding: '8px 12px' }}>Nome</th>
               <th style={{ padding: '8px 12px' }}>Email</th>
-              <th style={{ padding: '8px 12px' }}>CPF</th>
+              <th style={{ padding: '8px 12px' }}>Documento</th>
               <th style={{ padding: '8px 12px' }}></th>
             </tr>
           </thead>
@@ -98,7 +109,12 @@ export function UsersTab({ config }: Props) {
               <tr key={u.uid} style={{ borderBottom: '1px solid #f0f0f0' }}>
                 <td style={{ padding: '10px 12px', fontWeight: 500 }}>{u.name}</td>
                 <td style={{ padding: '10px 12px', color: '#555' }}>{u.email}</td>
-                <td style={{ padding: '10px 12px', fontFamily: 'monospace' }}>{u.cpf}</td>
+                <td style={{ padding: '10px 12px', fontFamily: 'monospace' }}>
+                  {u.document}
+                  {u.person_type === 'JURIDICA' && (
+                    <span style={{ marginLeft: 6, fontFamily: 'inherit', fontSize: 11, padding: '1px 6px', borderRadius: 8, background: '#e8eaf6', color: '#3949ab' }}>PJ</span>
+                  )}
+                </td>
                 <td style={{ padding: '10px 12px', textAlign: 'right' }}>
                   <button
                     onClick={() => remove(u)}

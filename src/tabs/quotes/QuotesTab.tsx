@@ -93,10 +93,10 @@ export function QuotesTab({ config }: Props) {
         <form onSubmit={createQuote} style={{ border: '1px solid #e0e0e0', borderRadius: 10, padding: 20, background: '#fafafa' }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
-              <label style={label}>CPF do segurado</label>
+              <label style={label}>Documento do segurado (CPF/CNPJ)</label>
               <input
-                required placeholder="00000000000" value={createForm.cpf}
-                onChange={(e) => setCreateForm({ ...createForm, cpf: e.target.value })}
+                required placeholder="00000000000" value={createForm.document}
+                onChange={(e) => setCreateForm({ ...createForm, document: e.target.value })}
                 style={input}
               />
             </div>
@@ -131,7 +131,7 @@ export function QuotesTab({ config }: Props) {
                 <div style={{ marginBottom: 16 }}>
                   <label style={label}>Apólice AUTO sendo renovada</label>
                   {lookupPolicies.length === 0 ? (
-                    <p style={{ fontSize: 12, color: '#999' }}>Esse CPF não tem apólice AUTO cadastrada.</p>
+                    <p style={{ fontSize: 12, color: '#999' }}>Esse documento não tem apólice AUTO cadastrada.</p>
                   ) : (
                     <select
                       required value={createForm.policyId}
@@ -159,7 +159,7 @@ export function QuotesTab({ config }: Props) {
 
                 {!createForm.useNewVehicle ? (
                   lookupVehicles.length === 0 ? (
-                    <p style={{ fontSize: 12, color: '#999' }}>Esse CPF não tem veículo cadastrado.</p>
+                    <p style={{ fontSize: 12, color: '#999' }}>Esse documento não tem veículo cadastrado.</p>
                   ) : (
                     <select
                       required value={createForm.vehicleId}

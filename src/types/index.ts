@@ -13,11 +13,14 @@ export interface Address {
   state: string
 }
 
+export type PersonType = 'FISICA' | 'JURIDICA'
+
 export interface User {
   uid: string
   name: string
   email: string
-  cpf: string
+  document: string
+  person_type: PersonType
   phone?: string
   address?: Address
 }
@@ -35,7 +38,8 @@ export interface Policy {
   end_date: number    // epoch ms
   status: PolicyStatus
   pdf_url: string
-  cpf: string
+  document: string
+  person_type: PersonType
   policy_number: string
   endorsement_number: string
   premium: Premium
