@@ -112,6 +112,8 @@ export function usePolicies(config: AdminConfig) {
   const [statusDraft, setStatusDraft] = useState<Record<string, PolicyStatus>>({})
   const [saving, setSaving] = useState<string | null>(null)
 
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
   function load() {
     listPolicies(config)
       .then((data) => {
@@ -244,6 +246,12 @@ export function usePolicies(config: AdminConfig) {
     }
   }
 
+  async function copyId(id: string) {
+    await navigator.clipboard.writeText(id)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1500)
+  }
+
   return {
     policies,
     loading,
@@ -258,6 +266,8 @@ export function usePolicies(config: AdminConfig) {
     setStatusDraft,
     saving,
     saveStatus,
+    copiedId,
+    copyId,
     addCoverage,
     removeCoverage,
     updateCoverage,

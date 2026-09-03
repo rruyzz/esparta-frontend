@@ -43,6 +43,7 @@ export function PoliciesTab({ config }: Props) {
     creating, create,
     statusDraft, setStatusDraft,
     saving, saveStatus,
+    copiedId, copyId,
     addCoverage, removeCoverage, updateCoverage,
     setVehicle, setOwner, setInsuredDetails, setMainDriver,
   } = usePolicies(config)
@@ -437,6 +438,7 @@ export function PoliciesTab({ config }: Props) {
               <th style={{ padding: '8px 12px' }}>Status</th>
               <th style={{ padding: '8px 12px' }}>Início → Vencimento</th>
               <th style={{ padding: '8px 12px' }}>Documento</th>
+              <th style={{ padding: '8px 12px' }}>ID</th>
               <th style={{ padding: '8px 12px' }}>Alterar status</th>
             </tr>
           </thead>
@@ -453,6 +455,18 @@ export function PoliciesTab({ config }: Props) {
                 </td>
                 <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: 12, color: '#888' }}>
                   {p.document}
+                </td>
+                <td style={{ padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#888' }}>{p.id}</span>
+                    <button
+                      onClick={() => copyId(p.id)}
+                      title="Copiar ID da apólice"
+                      style={{ padding: '4px 8px', border: '1px solid #ccc', background: '#fff', color: '#555', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
+                    >
+                      {copiedId === p.id ? 'Copiado!' : 'Copiar'}
+                    </button>
+                  </div>
                 </td>
                 <td style={{ padding: '10px 12px' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
