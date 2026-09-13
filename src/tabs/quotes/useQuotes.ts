@@ -55,6 +55,8 @@ export function useQuotes(config: AdminConfig) {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [proposalLoading, setProposalLoading] = useState(false)
   const [pdfUrlDraft, setPdfUrlDraft] = useState('')
+  const [proposedPremiumDraft, setProposedPremiumDraft] = useState('')
+  const [proposalValidUntilDraft, setProposalValidUntilDraft] = useState('')
   const [proposalSaving, setProposalSaving] = useState(false)
 
   function load() {
@@ -195,6 +197,8 @@ export function useQuotes(config: AdminConfig) {
     }
     setOpenProposal(quoteId)
     setPdfUrlDraft('')
+    setProposedPremiumDraft('')
+    setProposalValidUntilDraft('')
     await loadProposals(quoteId)
   }
 
@@ -210,14 +214,21 @@ export function useQuotes(config: AdminConfig) {
   }
 
   async function generateProposal(quoteId: string) {
-    if (!pdfUrlDraft) {
-      setError('URL do PDF é obrigatória')
+    if (!pdfUrlDraft || !proposedPremiumDraft || !proposalValidUntilDraft) {
+      setError('URL do PDF, prêmio proposto e validade são obrigatórios')
       return
     }
     setProposalSaving(true)
     try {
-      await createProposal(config, { quote_id: quoteId, pdf_url: pdfUrlDraft })
+      await createProposal(config, {
+        quote_id: quoteId,
+        pdf_url: pdfUrlDraft,
+        proposed_premium: parseFloat(proposedPremiumDraft) || 0,
+        valid_until: new Date(proposalValidUntilDraft).getTime(),
+      })
       setPdfUrlDraft('')
+      setProposedPremiumDraft('')
+      setProposalValidUntilDraft('')
       await loadProposals(quoteId)
     } catch (err) {
       setError((err as Error).message)
@@ -271,6 +282,10 @@ export function useQuotes(config: AdminConfig) {
     proposalLoading,
     pdfUrlDraft,
     setPdfUrlDraft,
+    proposedPremiumDraft,
+    setProposedPremiumDraft,
+    proposalValidUntilDraft,
+    setProposalValidUntilDraft,
     proposalSaving,
     toggleProposal,
     generateProposal,

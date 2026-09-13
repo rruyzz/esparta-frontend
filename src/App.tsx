@@ -3,15 +3,17 @@ import { UsersTab } from './tabs/users/UsersTab'
 import { PoliciesTab } from './tabs/policies/PoliciesTab'
 import { ClaimsTab } from './tabs/claims/ClaimsTab'
 import { QuotesTab } from './tabs/quotes/QuotesTab'
+import { ScenarioTab } from './tabs/scenario/ScenarioTab'
 import type { AdminConfig } from './api/adminApi'
 
-type Tab = 'users' | 'policies' | 'claims' | 'quotes'
+type Tab = 'users' | 'policies' | 'claims' | 'quotes' | 'scenario'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'users',    label: 'Usuários' },
   { id: 'policies', label: 'Apólices' },
   { id: 'claims',   label: 'Sinistros' },
   { id: 'quotes',   label: 'Cotações' },
+  { id: 'scenario', label: 'Cenário Rápido' },
 ]
 
 function App() {
@@ -72,6 +74,7 @@ function App() {
         {activeTab === 'policies' && <PoliciesTab config={config} />}
         {activeTab === 'claims'   && <ClaimsTab   config={config} />}
         {activeTab === 'quotes'   && <QuotesTab   config={config} />}
+        {activeTab === 'scenario' && <ScenarioTab config={config} />}
       </div>
 
     </div>

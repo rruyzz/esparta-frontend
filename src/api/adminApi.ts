@@ -1,6 +1,7 @@
 import type {
   User,
   PersonType,
+  Address,
   Policy,
   PolicyStatus,
   PolicyType,
@@ -74,6 +75,14 @@ export function createUser(
 
 export function deleteUser(config: AdminConfig, uid: string): Promise<void> {
   return request(config, 'DELETE', '/v1/admin/users', { uid })
+}
+
+export function updateUserProfile(
+  config: AdminConfig,
+  uid: string,
+  data: { phone?: string; address?: Address },
+): Promise<{ uid: string }> {
+  return request(config, 'PATCH', `/v1/admin/users/${uid}`, data)
 }
 
 // ── Apólices ──────────────────────────────────────────────────────────────────
@@ -210,7 +219,7 @@ export function listProposalsByQuote(config: AdminConfig, quoteId: string): Prom
 
 export function createProposal(
   config: AdminConfig,
-  data: { quote_id: string; pdf_url: string },
+  data: { quote_id: string; pdf_url: string; proposed_premium: number; valid_until: number },
 ): Promise<{ id: string }> {
   return request(config, 'POST', '/v1/admin/proposals', data)
 }
