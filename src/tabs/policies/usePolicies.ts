@@ -100,6 +100,74 @@ function toEpochMs(dateStr: string): number {
   return dateStr ? new Date(dateStr).getTime() : 0
 }
 
+// Extraído do submit do formulário pra ser reaproveitado por outros fluxos de
+// criação de apólice (ex.: wizard "Cenário Rápido") sem duplicar o mapeamento
+// do payload AUTO aninhado.
+export function toCreatePolicyPayload(form: typeof emptyPolicyForm) {
+  return {
+    document: form.document,
+    insurer_name: form.insurerName,
+    type: form.type,
+    start_date: toEpochMs(form.startDate),
+    end_date: toEpochMs(form.endDate),
+    status: form.status,
+    pdf_url: form.pdfUrl || undefined,
+    policy_number: form.policyNumber,
+    endorsement_number: form.endorsementNumber,
+    premium: {
+      amount: parseFloat(form.premiumAmount) || 0,
+      payment_type: form.paymentType,
+      ...(form.paymentType === 'PARCELADO' ? { installments: parseInt(form.installments, 10) || 0 } : {}),
+    },
+    ...(form.type === 'AUTO' ? {
+      auto: {
+        coverages: form.coverages.map((c) => ({
+          name: c.name,
+          coverage_limit: parseFloat(c.coverageLimit) || 0,
+          premium: parseFloat(c.premium) || 0,
+          deductible: parseFloat(c.deductible) || 0,
+        })),
+        vehicle: {
+          plate: form.vehicle.plate,
+          make_model: form.vehicle.makeModel,
+          year: parseInt(form.vehicle.year, 10) || 0,
+          usage_type: form.vehicle.usageType,
+          chassis: form.vehicle.chassis,
+          fipe_code: form.vehicle.fipeCode,
+          overnight_cep: form.vehicle.overnightCep,
+          lien_status: form.vehicle.lienStatus || null,
+          anti_theft_device: form.vehicle.antiTheftDevice || null,
+          tax_exempt: form.vehicle.taxExempt,
+        },
+        owner: form.hasOwner ? {
+          name: form.owner.name,
+          document: form.owner.document,
+          birth_date: toEpochMs(form.owner.birthDate),
+          sex: form.owner.sex,
+          relationship_to_insured: form.owner.relationshipToInsured,
+        } : null,
+        insured_details: {
+          document: form.insuredDetails.document,
+          person_type: form.insuredDetails.personType,
+          sex: form.insuredDetails.sex,
+          birth_date: toEpochMs(form.insuredDetails.birthDate),
+          marital_status: form.insuredDetails.maritalStatus,
+          social_name: form.insuredDetails.socialName || null,
+          bonus_class: form.insuredDetails.bonusClass,
+          ci: form.insuredDetails.ci,
+        },
+        main_driver: form.hasMainDriver ? {
+          name: form.mainDriver.name,
+          birth_date: toEpochMs(form.mainDriver.birthDate),
+          document: form.mainDriver.document,
+          sex: form.mainDriver.sex,
+          marital_status: form.mainDriver.maritalStatus,
+        } : null,
+      },
+    } : {}),
+  }
+}
+
 export function usePolicies(config: AdminConfig) {
   const [policies, setPolicies] = useState<Policy[]>([])
   const [loading, setLoading]   = useState(true)
@@ -162,68 +230,7 @@ export function usePolicies(config: AdminConfig) {
     setCreating(true)
     setError(null)
     try {
-      await createPolicy(config, {
-        document: form.document,
-        insurer_name: form.insurerName,
-        type: form.type,
-        start_date: toEpochMs(form.startDate),
-        end_date: toEpochMs(form.endDate),
-        status: form.status,
-        pdf_url: form.pdfUrl || undefined,
-        policy_number: form.policyNumber,
-        endorsement_number: form.endorsementNumber,
-        premium: {
-          amount: parseFloat(form.premiumAmount) || 0,
-          payment_type: form.paymentType,
-          ...(form.paymentType === 'PARCELADO' ? { installments: parseInt(form.installments, 10) || 0 } : {}),
-        },
-        ...(form.type === 'AUTO' ? {
-          auto: {
-            coverages: form.coverages.map((c) => ({
-              name: c.name,
-              coverage_limit: parseFloat(c.coverageLimit) || 0,
-              premium: parseFloat(c.premium) || 0,
-              deductible: parseFloat(c.deductible) || 0,
-            })),
-            vehicle: {
-              plate: form.vehicle.plate,
-              make_model: form.vehicle.makeModel,
-              year: parseInt(form.vehicle.year, 10) || 0,
-              usage_type: form.vehicle.usageType,
-              chassis: form.vehicle.chassis,
-              fipe_code: form.vehicle.fipeCode,
-              overnight_cep: form.vehicle.overnightCep,
-              lien_status: form.vehicle.lienStatus || null,
-              anti_theft_device: form.vehicle.antiTheftDevice || null,
-              tax_exempt: form.vehicle.taxExempt,
-            },
-            owner: form.hasOwner ? {
-              name: form.owner.name,
-              document: form.owner.document,
-              birth_date: toEpochMs(form.owner.birthDate),
-              sex: form.owner.sex,
-              relationship_to_insured: form.owner.relationshipToInsured,
-            } : null,
-            insured_details: {
-              document: form.insuredDetails.document,
-              person_type: form.insuredDetails.personType,
-              sex: form.insuredDetails.sex,
-              birth_date: toEpochMs(form.insuredDetails.birthDate),
-              marital_status: form.insuredDetails.maritalStatus,
-              social_name: form.insuredDetails.socialName || null,
-              bonus_class: form.insuredDetails.bonusClass,
-              ci: form.insuredDetails.ci,
-            },
-            main_driver: form.hasMainDriver ? {
-              name: form.mainDriver.name,
-              birth_date: toEpochMs(form.mainDriver.birthDate),
-              document: form.mainDriver.document,
-              sex: form.mainDriver.sex,
-              marital_status: form.mainDriver.maritalStatus,
-            } : null,
-          },
-        } : {}),
-      })
+      await createPolicy(config, toCreatePolicyPayload(form))
       setForm(emptyPolicyForm)
       setShowForm(false)
       load()

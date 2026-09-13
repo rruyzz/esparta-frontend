@@ -69,7 +69,10 @@ export function QuotesTab({ config }: Props) {
     lookupDone, lookupLoading, lookupPolicies, lookupVehicles,
     creating, searchInsured, createQuote,
     openProposal, proposals, proposalLoading,
-    pdfUrlDraft, setPdfUrlDraft, proposalSaving,
+    pdfUrlDraft, setPdfUrlDraft,
+    proposedPremiumDraft, setProposedPremiumDraft,
+    proposalValidUntilDraft, setProposalValidUntilDraft,
+    proposalSaving,
     toggleProposal, generateProposal, advanceProposal,
   } = useQuotes(config)
 
@@ -374,12 +377,24 @@ export function QuotesTab({ config }: Props) {
                 {proposalLoading ? (
                   <div style={{ fontSize: 12, color: '#aaa' }}>Carregando...</div>
                 ) : proposals.length === 0 ? (
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <input
                       placeholder="https://... (PDF da proposta)"
                       value={pdfUrlDraft}
                       onChange={(e) => setPdfUrlDraft(e.target.value)}
-                      style={{ flex: 1, padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fafafa' }}
+                      style={{ flex: 2, minWidth: 180, padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fafafa' }}
+                    />
+                    <input
+                      type="number" step="0.01" placeholder="Prêmio proposto (R$)"
+                      value={proposedPremiumDraft}
+                      onChange={(e) => setProposedPremiumDraft(e.target.value)}
+                      style={{ flex: 1, minWidth: 130, padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fafafa' }}
+                    />
+                    <input
+                      type="date"
+                      value={proposalValidUntilDraft}
+                      onChange={(e) => setProposalValidUntilDraft(e.target.value)}
+                      style={{ flex: 1, minWidth: 130, padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fafafa' }}
                     />
                     <button
                       onClick={() => generateProposal(q.id)}
