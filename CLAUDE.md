@@ -20,7 +20,7 @@ Painel admin React + Vite + TypeScript. Single-page app sem roteador — navega�
 **Fluxo de dados:**
 ```
 App.tsx (AdminConfig state)
-  └── Tab components (UsersTab, PoliciesTab, ClaimsTab, QuotesTab)
+  └── Tab components (UsersTab, PoliciesTab, ClaimsTab, QuotesTab, ScenarioTab)
         └── src/api/adminApi.ts  ← único ponto de acesso ao backend
               └── GET/POST/PATCH /v1/admin/*
 ```
@@ -36,7 +36,13 @@ App.tsx (AdminConfig state)
 - `use<Recurso>.ts` — hook que concentra estado (`useState`) e handlers (`load`, `create`, `save`, etc.), consumindo `adminApi.ts`. Equivalente a um ViewModel/Presenter no Android: dono da lógica, sem JSX.
 - `<Recurso>Tab.tsx` — componente funcional "burro": só desestrutura o retorno de `use<Recurso>(config)` e renderiza. Não declara `useState` de dados nem chama `adminApi.ts` diretamente. Padrão uniforme: estados `loading`, `error`, dados vindos do hook.
 
+Um hook pode exportar uma função pura de montagem de payload (ex.: `toCreatePolicyPayload` em `usePolicies.ts`) pra ser reaproveitada por outro fluxo sem duplicar o mapeamento — foi assim que o wizard abaixo reaproveitou o payload `AUTO` aninhado da Apólice.
+
+**`src/tabs/scenario/`** — exceção ao padrão "uma pasta por recurso": `useScenario.ts` + `ScenarioTab.tsx` não fazem CRUD de uma entidade só, e sim orquestram a cadeia conta→veículo→cotação→proposta→apólice num fluxo único (wizard "Cenário Rápido" pra gerar dados de teste em dev local), chamando várias funções de `adminApi.ts` em sequência. Mesmo par hook+view, escopo diferente.
+
 **`src/tabs/shared/`** — componentes de apresentação usados por mais de um recurso (ex: `StatusHistory.tsx`, usado por Claims e Quotes). Só vira compartilhado na segunda ocorrência do mesmo padrão — não antecipar.
+
+**`src/lib/`** — helpers puros sem estado, reaproveitáveis por qualquer tab (ex.: `fakeData.ts`, gerador de dados de teste plausíveis usado pelo wizard `scenario/`). Diferente de `src/tabs/shared/`: aqui não tem JSX, só funções.
 
 ## Convenções
 
