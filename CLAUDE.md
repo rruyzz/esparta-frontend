@@ -14,7 +14,7 @@ npm run preview  # serve o build de produção localmente
 
 Verificação: TypeScript (`tsc -b`), ESLint e os testes do Vitest. O CI (`.github/workflows/ci.yml`) roda os quatro em PR.
 
-**Testes** (`*.test.ts` ao lado do código): hook de estado real é testado com `renderHook` do Testing Library e a camada de rede falsa via `vi.mock('../../api/adminApi', ...)` com `importOriginal` (só as funções usadas viram `vi.fn`). Hoje só o `useScenario` (wizard "Cenário Rápido"); hooks de CRUD simples (`useUsers` etc.) ficam fora por baixa prioridade. Os setters do hook usam o estado do render atual, então cada chamada precisa do seu próprio `act`.
+**Testes** (`*.test.ts` ao lado do código): hook de estado real é testado com `renderHook` do Testing Library e a camada de rede falsa via `vi.mock('../../api/adminApi', ...)` com `importOriginal` (só as funções usadas viram `vi.fn`). Hoje `useScenario` (wizard "Cenário Rápido") e o erro do formulário de novo sinistro em `useClaims` (`describeCreateClaimError`); os demais hooks de CRUD simples (`useUsers` etc.) ficam fora por baixa prioridade. Os setters do hook usam o estado do render atual, então cada chamada precisa do seu próprio `act`.
 
 ## Arquitetura
 

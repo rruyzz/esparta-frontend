@@ -11,6 +11,21 @@ export const emptyClaimForm = {
   photoUrl: '',
 }
 
+/**
+ * Traduz o erro do `request()` (`POST /v1/admin/claims → 409: policy expired`) numa frase para o operador.
+ * Texto desconhecido segue como veio, para nunca esconder um erro novo do backend.
+ */
+export function describeCreateClaimError(err: Error): string {
+  const msg = err.message
+  if (msg.includes('policy expired')) return 'Esta apólice está vencida e não pode abrir sinistro. Escolha uma apólice vigente.'
+  if (msg.includes('policy cancelled')) return 'Esta apólice está cancelada e não pode abrir sinistro. Escolha uma apólice vigente.'
+  if (msg.includes('user not found')) return 'Nenhum segurado encontrado com esse CPF.'
+  if (msg.includes('policy not found')) return 'Essa apólice não pertence ao CPF informado.'
+  if (msg.includes('→ 403')) return 'Chave de admin inválida. Confira o campo Admin Key.'
+  if (msg.includes('Failed to fetch')) return 'Não foi possível falar com o backend. Confira o endereço no campo Backend.'
+  return msg.trim() // o http.Error do Go termina o corpo com \n
+}
+
 export function useClaims(config: AdminConfig) {
   const [claims, setClaims]   = useState<Claim[]>([])
   const [loading, setLoading] = useState(true)
@@ -19,6 +34,8 @@ export function useClaims(config: AdminConfig) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(emptyClaimForm)
   const [creating, setCreating] = useState(false)
+  // Erro do formulário de novo sinistro: aparece junto do botão, e não no topo da lista (`error`).
+  const [createError, setCreateError] = useState<string | null>(null)
 
   // Estado de edição por linha — equivalente a um Map<id, UiState> no ViewModel.
   const [statusDraft, setStatusDraft] = useState<Record<string, ClaimStatus>>({})
@@ -45,6 +62,7 @@ export function useClaims(config: AdminConfig) {
     e.preventDefault()
     setCreating(true)
     setError(null)
+    setCreateError(null)
     try {
       await createClaim(config, {
         document: form.document,
@@ -57,7 +75,7 @@ export function useClaims(config: AdminConfig) {
       setShowForm(false)
       load()
     } catch (err) {
-      setError((err as Error).message)
+      setCreateError(describeCreateClaimError(err as Error))
     } finally {
       setCreating(false)
     }
@@ -100,6 +118,7 @@ export function useClaims(config: AdminConfig) {
     form,
     setForm,
     creating,
+    createError,
     create,
     statusDraft,
     setStatusDraft,

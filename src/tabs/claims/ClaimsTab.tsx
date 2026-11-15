@@ -34,7 +34,7 @@ export function ClaimsTab({ config }: Props) {
     claims, loading, error,
     showForm, setShowForm,
     form, setForm,
-    creating, create,
+    creating, createError, create,
     statusDraft, setStatusDraft,
     noteDraft, setNoteDraft,
     saving, openHistory, history, historyLoading,
@@ -103,6 +103,11 @@ export function ClaimsTab({ config }: Props) {
               style={{ width: '100%', padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fff' }}
             />
           </div>
+          {createError && (
+            <p role="alert" style={{ margin: '0 0 12px', padding: '10px 14px', borderRadius: 8, background: '#ffebee', color: '#c62828', fontSize: 14 }}>
+              {createError}
+            </p>
+          )}
           <button
             type="submit" disabled={creating}
             style={{ width: '100%', padding: 12, background: '#1a1a2e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
