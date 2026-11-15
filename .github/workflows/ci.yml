@@ -26,6 +26,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Testes
+        run: npm test
+
       # `build` roda `tsc -b` (type-check) antes do Vite.
       - name: Type-check e build
         run: npm run build

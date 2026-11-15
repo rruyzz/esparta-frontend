@@ -8,10 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev      # dev server em http://localhost:5173
 npm run build    # tsc -b && vite build
 npm run lint     # ESLint
+npm test         # Vitest (jsdom), roda uma vez
 npm run preview  # serve o build de produção localmente
 ```
 
-Não há testes automatizados; verificação é pelo TypeScript (`tsc -b`) e ESLint.
+Verificação: TypeScript (`tsc -b`), ESLint e os testes do Vitest. O CI (`.github/workflows/ci.yml`) roda os quatro em PR.
+
+**Testes** (`*.test.ts` ao lado do código): hook de estado real é testado com `renderHook` do Testing Library e a camada de rede falsa via `vi.mock('../../api/adminApi', ...)` com `importOriginal` (só as funções usadas viram `vi.fn`). Hoje só o `useScenario` (wizard "Cenário Rápido"); hooks de CRUD simples (`useUsers` etc.) ficam fora por baixa prioridade. Os setters do hook usam o estado do render atual, então cada chamada precisa do seu próprio `act`.
 
 ## Arquitetura
 
