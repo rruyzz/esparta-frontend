@@ -48,6 +48,6 @@ Um hook pode exportar uma função pura de montagem de payload (ex.: `toCreatePo
 
 - JSON snake_case em toda a stack — bater com os `json:` tags do Go.
 - Styling inline via `style={{}}` — sem CSS modules, sem Tailwind, sem styled-components.
-- Autenticação: `X-Admin-Key: esparta-admin-2026` (configurável pelo usuário no header do app).
+- Autenticação: `X-Admin-Key` com o valor de `ADMIN_KEY` do servidor (digitado pelo usuário no header do app; não fica no código).
 - Ao adicionar um novo recurso, criar `src/tabs/<recurso>/use<Recurso>.ts` (hook com estado/lógica) + `src/tabs/<recurso>/<Recurso>Tab.tsx` (view), adicionar as funções em `adminApi.ts`, registrar o tipo em `types/index.ts`, e adicionar a entry em `TABS` no `App.tsx`.
 - `color-scheme` em `index.css` é fixado como `light` — o admin não tem modo escuro; deixar `light dark` faz o navegador estilizar `<input>`/`<select>` nativos com texto claro em fundo escuro, invisível sobre o fundo branco forçado inline.

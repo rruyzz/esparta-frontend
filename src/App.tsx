@@ -19,7 +19,7 @@ const TABS: { id: Tab; label: string }[] = [
 function App() {
   const [config, setConfig] = useState<AdminConfig>({
     baseUrl: 'http://localhost:8080',
-    adminKey: 'esparta-admin-2026',
+    adminKey: '',
   })
   // activeTab = equivalente ao backstack/NavController no Android
   const [activeTab, setActiveTab] = useState<Tab>('users')
