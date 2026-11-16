@@ -192,6 +192,18 @@ export function createQuoteAdmin(
   return request(config, 'POST', '/v1/admin/quotes', data)
 }
 
+/**
+ * Copia uma cotação EXPIRADA numa cotação nova (AGUARDANDO), do mesmo segurado. Feita no servidor. A cópia é um ponto
+ * de partida: `overrides` ajusta as coberturas e as observações; campo ausente mantém o da original.
+ */
+export function copyQuoteAdmin(
+  config: AdminConfig,
+  id: string,
+  overrides?: { coverages?: QuoteCoverages; notes?: string },
+): Promise<{ id: string }> {
+  return request(config, 'POST', `/v1/admin/quotes/${id}/copy`, overrides)
+}
+
 // ── Veículos ──────────────────────────────────────────────────────────────────
 
 export function listVehiclesAdmin(config: AdminConfig, document: string): Promise<Vehicle[]> {

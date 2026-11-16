@@ -4,8 +4,18 @@ import type { Quote, QuoteHistoryEntry, QuoteCoverages, Policy, Vehicle, Vehicle
 import {
   listQuotes, updateQuoteStatus, getQuoteHistory,
   listPolicies, listVehiclesAdmin, createVehicleAdmin, createQuoteAdmin,
-  listProposalsByQuote, createProposal, updateProposalStatus,
+  listProposalsByQuote, createProposal, updateProposalStatus, copyQuoteAdmin,
 } from '../../api/adminApi'
+import { endOfDayMs } from '../../lib/dates'
+
+/** Traduz o erro de `POST /v1/admin/quotes/{id}/copy` numa frase; texto desconhecido segue como veio. */
+export function describeCopyQuoteError(err: Error): string {
+  const msg = err.message
+  if (msg.includes('quote not expired')) return 'Só uma cotação expirada pode ser copiada.'
+  if (msg.includes('Quote not found')) return 'Cotação não encontrada.'
+  if (msg.includes('→ 403')) return 'Chave de admin inválida. Confira o campo Admin Key.'
+  return msg.trim()
+}
 
 export const emptyCreateQuoteForm = {
   document: '',
@@ -28,10 +38,30 @@ export const emptyCreateQuoteForm = {
   notes: '',
 }
 
+export interface CopyDraft {
+  coverages: QuoteCoverages
+  notes: string
+  /** Valor e validade são opcionais: com os dois, a nova cotação já nasce respondida. */
+  premium: string
+  validUntil: string
+}
+
+const emptyCopyDraft: CopyDraft = {
+  coverages: { comprehensive: false, civil_liability: false, personal_accidents: false, rental_car: false },
+  notes: '',
+  premium: '',
+  validUntil: '',
+}
+
 export function useQuotes(config: AdminConfig) {
   const [quotes, setQuotes]   = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
+  const [notice, setNotice]   = useState<string | null>(null)
+
+  // Cópia de cotação expirada: o formulário abre pré-preenchido para a corretora ajustar o que mudou.
+  const [copyingId, setCopyingId] = useState<string | null>(null)
+  const [copyDraft, setCopyDraft] = useState<CopyDraft>(emptyCopyDraft)
 
   const [premiumDraft, setPremiumDraft] = useState<Record<string, string>>({})
   const [validUntilDraft, setValidUntilDraft] = useState<Record<string, string>>({})
@@ -69,6 +99,7 @@ export function useQuotes(config: AdminConfig) {
   useEffect(load, [config])
 
   async function respond(id: string) {
+    setNotice(null)
     const premium = parseFloat(premiumDraft[id])
     const validRaw = validUntilDraft[id]
     if (!premium || Number.isNaN(premium) || premium <= 0) {
@@ -83,7 +114,7 @@ export function useQuotes(config: AdminConfig) {
     try {
       await updateQuoteStatus(config, id, 'RESPONDIDA', {
         premium,
-        valid_until: new Date(validRaw).getTime(),
+        valid_until: endOfDayMs(validRaw),
         notes: notesDraft[id] ?? '',
       })
       load()
@@ -95,12 +126,69 @@ export function useQuotes(config: AdminConfig) {
   }
 
   async function close(id: string) {
+    setNotice(null)
     setSaving(id)
     try {
       await updateQuoteStatus(config, id, 'FECHADA')
       load()
     } catch (err) {
       setError((err as Error).message)
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  // Cotação expirada: a corretora a copia numa cotação nova e ajusta o que mudou (coberturas e observações). Se já souber
+  // o valor e a validade, a nova cotação nasce respondida; senão, aguardando. A expirada continua como está.
+  function openCopy(q: Quote) {
+    setNotice(null)
+    setError(null)
+    setCopyingId(q.id)
+    setCopyDraft({ coverages: q.coverages, notes: q.notes ?? '', premium: '', validUntil: '' })
+  }
+
+  function cancelCopy() {
+    setCopyingId(null)
+  }
+
+  async function submitCopy(id: string) {
+    setNotice(null)
+    setError(null)
+    const hasPremium = copyDraft.premium.trim() !== ''
+    const hasValidUntil = copyDraft.validUntil !== ''
+    if (hasPremium !== hasValidUntil) {
+      setError('Informe o valor e a validade juntos, ou deixe os dois em branco.')
+      return
+    }
+    const premium = parseFloat(copyDraft.premium)
+    if (hasPremium && (Number.isNaN(premium) || premium <= 0)) {
+      setError('Valor inválido.')
+      return
+    }
+
+    setSaving(id)
+    try {
+      const { id: newId } = await copyQuoteAdmin(config, id, { coverages: copyDraft.coverages, notes: copyDraft.notes })
+      if (!hasPremium) {
+        setNotice('Cotação copiada: a nova cotação está aguardando resposta.')
+      } else {
+        try {
+          await updateQuoteStatus(config, newId, 'RESPONDIDA', {
+            premium,
+            valid_until: endOfDayMs(copyDraft.validUntil),
+            notes: '',
+          })
+          setNotice('Cotação copiada e já respondida.')
+        } catch (err) {
+          // A cópia existe e está aguardando: não desfaz, só avisa para responder pela lista.
+          setNotice('Cotação copiada, mas não foi possível responder. Responda a nova cotação na lista.')
+          setError((err as Error).message)
+        }
+      }
+      setCopyingId(null)
+      load()
+    } catch (err) {
+      setError(describeCopyQuoteError(err as Error))
     } finally {
       setSaving(null)
     }
@@ -253,6 +341,7 @@ export function useQuotes(config: AdminConfig) {
     quotes,
     loading,
     error,
+    notice,
     premiumDraft,
     setPremiumDraft,
     validUntilDraft,
@@ -265,6 +354,12 @@ export function useQuotes(config: AdminConfig) {
     historyLoading,
     respond,
     close,
+    copyingId,
+    copyDraft,
+    setCopyDraft,
+    openCopy,
+    cancelCopy,
+    submitCopy,
     toggleHistory,
     showCreateForm,
     setShowCreateForm,

@@ -59,12 +59,13 @@ function formatMoney(value: number) {
 
 export function QuotesTab({ config }: Props) {
   const {
-    quotes, loading, error,
+    quotes, loading, error, notice,
     premiumDraft, setPremiumDraft,
     validUntilDraft, setValidUntilDraft,
     notesDraft, setNotesDraft,
     saving, openHistory, history, historyLoading,
     respond, close, toggleHistory,
+    copyingId, copyDraft, setCopyDraft, openCopy, cancelCopy, submitCopy,
     showCreateForm, setShowCreateForm,
     createForm, setCreateForm,
     lookupDone, lookupLoading, lookupPolicies, lookupVehicles,
@@ -92,6 +93,7 @@ export function QuotesTab({ config }: Props) {
       </div>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
+      {notice && <p role="status" style={{ color: '#2e7d32' }}>{notice}</p>}
 
       {showCreateForm && (
         <form onSubmit={createQuote} style={{ border: '1px solid #e0e0e0', borderRadius: 10, padding: 20, background: '#fafafa' }}>
@@ -334,6 +336,9 @@ export function QuotesTab({ config }: Props) {
                 {q.status === 'RESPONDIDA' && (
                   <div style={{ color: '#555' }}>Válido até: <strong>{formatDate(q.response.valid_until)}</strong></div>
                 )}
+                {q.status === 'EXPIRADA' && (
+                  <div style={{ color: '#c62828' }}>Expirou em: <strong>{formatDate(q.response.valid_until)}</strong></div>
+                )}
                 {q.response.notes && (
                   <div style={{ marginTop: 4, fontStyle: 'italic', color: '#555' }}>"{q.response.notes}"</div>
                 )}
@@ -342,13 +347,22 @@ export function QuotesTab({ config }: Props) {
                   {q.status === 'FECHADA' && q.closed_at && `Fechada em ${formatDateTime(q.closed_at)}`}
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  {q.status === 'RESPONDIDA' && (
+                  {(q.status === 'RESPONDIDA' || q.status === 'EXPIRADA') && (
                     <button
                       onClick={() => close(q.id)}
                       disabled={saving === q.id}
                       style={{ padding: '8px 16px', background: '#fff', color: '#c62828', border: '1px solid #c62828', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}
                     >
                       {saving === q.id ? 'Fechando...' : 'Fechar cotação'}
+                    </button>
+                  )}
+                  {q.status === 'EXPIRADA' && (
+                    <button
+                      onClick={() => openCopy(q)}
+                      disabled={saving === q.id}
+                      style={{ padding: '8px 16px', background: '#fff', color: '#1565c0', border: '1px solid #1565c0', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}
+                    >
+                      Copiar e ajustar
                     </button>
                   )}
                   <button
@@ -365,6 +379,71 @@ export function QuotesTab({ config }: Props) {
                       Proposta
                     </button>
                   )}
+                </div>
+              </div>
+            )}
+
+            {copyingId === q.id && (
+              <div style={{ marginTop: 12, borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
+                <strong style={{ fontSize: 14, color: '#1a1a2e' }}>Copiar como nova cotação</strong>
+                <p style={{ margin: '4px 0 10px', fontSize: 12, color: '#777' }}>
+                  A nova cotação é do mesmo segurado, veículo e apólice. Ajuste o que mudou.
+                </p>
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 10 }}>
+                  {(Object.keys(coverageLabels) as (keyof QuoteCoverages)[]).map((k) => (
+                    <label key={k} style={{ fontSize: 13, color: '#333', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <input
+                        type="checkbox" checked={copyDraft.coverages[k]}
+                        onChange={(e) => setCopyDraft({ ...copyDraft, coverages: { ...copyDraft.coverages, [k]: e.target.checked } })}
+                      />
+                      {coverageLabels[k]}
+                    </label>
+                  ))}
+                </div>
+                <label htmlFor={`copy-notes-${q.id}`} style={{ display: 'block', fontSize: 12, color: '#555', marginBottom: 4 }}>Observações</label>
+                <textarea
+                  id={`copy-notes-${q.id}`}
+                  value={copyDraft.notes}
+                  onChange={(e) => setCopyDraft({ ...copyDraft, notes: e.target.value })}
+                  style={{ width: '100%', resize: 'vertical', minHeight: 56, padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fafafa' }}
+                />
+                <p style={{ margin: '12px 0 6px', fontSize: 12, color: '#777' }}>
+                  Se já souber o valor e a validade, preencha os dois e a nova cotação já nasce respondida. Em branco, ela fica aguardando.
+                </p>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 160px' }}>
+                    <label htmlFor={`copy-premium-${q.id}`} style={{ display: 'block', fontSize: 12, color: '#555', marginBottom: 4 }}>Prêmio anual (R$)</label>
+                    <input
+                      id={`copy-premium-${q.id}`} type="number" min="0" step="0.01" placeholder="Opcional"
+                      value={copyDraft.premium}
+                      onChange={(e) => setCopyDraft({ ...copyDraft, premium: e.target.value })}
+                      style={{ width: '100%', padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fafafa' }}
+                    />
+                  </div>
+                  <div style={{ flex: '1 1 160px' }}>
+                    <label htmlFor={`copy-valid-${q.id}`} style={{ display: 'block', fontSize: 12, color: '#555', marginBottom: 4 }}>Válido até</label>
+                    <input
+                      id={`copy-valid-${q.id}`} type="date"
+                      value={copyDraft.validUntil}
+                      onChange={(e) => setCopyDraft({ ...copyDraft, validUntil: e.target.value })}
+                      style={{ width: '100%', padding: '9px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14, background: '#fafafa' }}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button
+                    onClick={() => submitCopy(q.id)}
+                    disabled={saving === q.id}
+                    style={{ padding: '9px 20px', background: '#1a1a2e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    {saving === q.id ? 'Copiando...' : 'Criar cópia'}
+                  </button>
+                  <button
+                    onClick={cancelCopy}
+                    style={{ padding: '9px 14px', border: '1px solid #1a1a2e', background: '#fff', color: '#1a1a2e', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}
+                  >
+                    Cancelar
+                  </button>
                 </div>
               </div>
             )}

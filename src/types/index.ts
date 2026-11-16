@@ -185,6 +185,7 @@ export interface Quote {
   responded_at?: number  // epoch ms
   closed_at?: number     // epoch ms
   created_at: number     // epoch ms
+  copied_from?: string   // id da cotação expirada de onde esta foi copiada
 }
 
 export interface QuoteHistoryEntry {

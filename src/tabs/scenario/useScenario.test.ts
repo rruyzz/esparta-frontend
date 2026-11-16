@@ -154,6 +154,17 @@ describe('useScenario.runScenario', () => {
       expect(steps(log)).toEqual(['Conta', 'Endereço', 'Veículo', 'Cotação', 'Cotação → RESPONDIDA', 'Cotação → FECHADA'])
     })
 
+    it('a validade da resposta vai até o FIM do dia escolhido', async () => {
+      const h = setup()
+      withQuote(h, 'RESPONDIDA')
+      h.set((r) => r.setQuote({ validUntil: '2026-12-01' }))
+      await run(h)
+
+      expect(m.updateQuoteStatus).toHaveBeenCalledWith(config, 'quote-1', 'RESPONDIDA', expect.objectContaining({
+        valid_until: new Date(2026, 11, 1, 23, 59, 59, 999).getTime(),
+      }))
+    })
+
     it('prêmio vazio vira 0, e não NaN', async () => {
       const hook = setup()
       hook.set((r) => r.setVehicle({ enabled: true, plate: 'ABC1D23', year: '2020', overnightCep: '01310100' }))
