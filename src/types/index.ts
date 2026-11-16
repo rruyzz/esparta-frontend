@@ -150,7 +150,8 @@ export interface ClaimHistoryEntry {
 
 // ── Cotação ───────────────────────────────────────────────────────────────────
 
-export type QuoteStatus = 'AGUARDANDO' | 'RESPONDIDA' | 'FECHADA'
+// EXPIRADA é calculada na leitura (#12): RESPONDIDA com a validade vencida. O status gravado segue RESPONDIDA.
+export type QuoteStatus = 'AGUARDANDO' | 'RESPONDIDA' | 'FECHADA' | 'EXPIRADA'
 
 export interface QuoteCoverages {
   comprehensive: boolean
