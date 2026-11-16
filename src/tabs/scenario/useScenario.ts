@@ -31,6 +31,7 @@ import {
   type InsuredDetailsForm,
   type MainDriverForm,
 } from '../policies/usePolicies'
+import { endOfDayMs } from '../../lib/dates'
 import {
   randomName,
   randomEmail,
@@ -351,7 +352,7 @@ export function useScenario(config: AdminConfig) {
           if (quote.targetStatus === 'RESPONDIDA' || quote.targetStatus === 'FECHADA') {
             await updateQuoteStatus(config, quoteId, 'RESPONDIDA', {
               premium: parseFloat(quote.premium) || 0,
-              valid_until: quote.validUntil ? new Date(quote.validUntil).getTime() : daysFromNow(30),
+              valid_until: quote.validUntil ? endOfDayMs(quote.validUntil) : daysFromNow(30),
               notes: quote.responseNotes || undefined,
             })
             pushLog({ step: 'Cotação → RESPONDIDA', status: 'ok', message: quoteId })
